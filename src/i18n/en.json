@@ -1,0 +1,38 @@
+{
+  "%n lines updated": {
+    "one": "%n line updated",
+    "other": "%n lines updated"
+  },
+  "%n lines added": {
+    "one": "%n line added",
+    "other": "%n lines added"
+  },
+  "%n billed on %1": {
+    "one": "%n billed on %1",
+    "other": "%n billed on %1"
+  },
+  "%n skipped": {
+    "one": "%n skipped",
+    "other": "%n skipped"
+  },
+  "%n already up to date": {
+    "one": "%n already up to date",
+    "other": "%n already up to date"
+  },
+  "Import %n lines": {
+    "one": "Import %n line",
+    "other": "Import %n lines"
+  },
+  "%n updated": {
+    "one": "%n updated",
+    "other": "%n updated"
+  },
+  "%n added": {
+    "one": "%n added",
+    "other": "%n added"
+  },
+  "%n billed": {
+    "one": "%n billed",
+    "other": "%n billed"
+  }
+}

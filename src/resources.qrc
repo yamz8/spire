@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="Main.qml">Main.qml</file>
+        <file alias="SheetView.qml">SheetView.qml</file>
+        <file alias="SheetCell.qml">SheetCell.qml</file>
+        <file alias="SummaryPanel.qml">SummaryPanel.qml</file>
+        <file alias="ChangeOrderView.qml">ChangeOrderView.qml</file>
+        <file alias="ProjectPopup.qml">ProjectPopup.qml</file>
+        <file alias="ImportPopup.qml">ImportPopup.qml</file>
+        <file alias="ConfirmPopup.qml">ConfirmPopup.qml</file>
+        <file alias="DatePopup.qml">DatePopup.qml</file>
+        <file alias="Dropdown.qml">Dropdown.qml</file>
+        <file alias="HelpOverlay.qml">HelpOverlay.qml</file>
+        <file alias="skill.md">skill.md</file>
+        <file alias="i18n/en.json">i18n/en.json</file>
+        <file alias="i18n/da.json">i18n/da.json</file>
+        <file alias="i18n/de.json">i18n/de.json</file>
+        <file alias="i18n/es-MX.json">i18n/es-MX.json</file>
+        <file alias="i18n/fr.json">i18n/fr.json</file>
+        <file alias="i18n/he.json">i18n/he.json</file>
+    </qresource>
+</RCC>

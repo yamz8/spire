@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Name=Spire
+Comment=Progress billing and pay applications for contractors
+Comment[da]=Acontoopgørelser og betalingsanmodninger for entreprenører
+Comment[de]=Abschlagsrechnungen und Baufortschritt für Bauunternehmen
+Comment[es]=Estimaciones de avance y pagos para contratistas
+Comment[fr]=Situations de travaux et demandes de paiement pour entreprises
+Comment[he]=חשבונות חלקיים ובקשות תשלום לקבלנים
+Exec=spire open %f
+Icon=spire
+Terminal=false
+Categories=Office;Finance;ProjectManagement;
+Keywords=billing;invoice;AIA;G702;G703;schedule of values;retainage;construction;
+MimeType=application/x-spire;
+StartupWMClass=spire
