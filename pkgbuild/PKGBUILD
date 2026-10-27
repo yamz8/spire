@@ -2,6 +2,7 @@ pkgname=spire
 pkgver=0.1.0
 pkgrel=1
 pkgdesc='Progress billing for contractors: schedule of values, pay applications (G702/G703), change orders, retainage'
+url='https://github.com/yamz8/spire'
 arch=('x86_64' 'aarch64')
 license=('MIT')
 depends=('qt6-base' 'qt6-declarative' 'qt6-wayland' 'xdg-desktop-portal')
