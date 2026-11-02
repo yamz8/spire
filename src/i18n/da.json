@@ -276,5 +276,6 @@
   "Could not listen for the file chooser's answer.": "Kunne ikke lytte efter filvælgerens svar.",
   "The file chooser failed: %1": "Filvælgeren mislykkedes: %1",
   "On work, %": "På arbejde, %",
-  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "Linje %1: %2 på ark %3 tælles ikke med, fordi arket ikke har nogen målestok."
+  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "Linje %1: %2 på ark %3 tælles ikke med, fordi arket ikke har nogen målestok.",
+  "Approved": "Godkendt"
 }

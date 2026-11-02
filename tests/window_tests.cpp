@@ -283,6 +283,83 @@ private slots:
         QVERIFY(w.center(w.find("summary")).x() < w.center(w.find("sheet")).x());
     }
 
+    // The popups at a laptop's window size (1366x768, less the bar and
+    // gaps), saved to SPIRE_SHOTS when it is set, for a look.
+    void popupsFitALaptopWindow()
+    {
+        Window w;
+        w.window->resize(1342, 718);
+        QTest::qWait(150);
+        const QString shots = qEnvironmentVariable("SPIRE_SHOTS");
+        auto check = [&](const QString &name, QQuickItem *popupItem) {
+            QVERIFY2(popupItem, qPrintable("no " + name));
+            const QRectF r = popupItem->mapRectToScene(QRectF(0, 0, popupItem->width(), popupItem->height()));
+            QVERIFY2(r.left() >= 0 && r.top() >= 0 && r.right() <= 1342 && r.bottom() <= 718, qPrintable(name + " does not fit"));
+            if (!shots.isEmpty())
+                w.window->grabWindow().save(shots + "/" + name + ".png");
+        };
+        auto popupOf = [&](const char *button) {
+            QQuickItem *item = w.find(button);
+            while (item && !item->inherits("QQuickPopupItem"))
+                item = item->parentItem();
+            return item;
+        };
+
+        w.backend->setPercent(w.steel, "40");
+        w.click("submitPeriod");
+        QTRY_VERIFY(w.find("confirmButton"));
+        QTest::qWait(300);
+        check("confirm", popupOf("confirmButton"));
+        w.key(Qt::Key_Escape);
+        QTRY_VERIFY(!w.find("confirmButton"));
+
+        QFile csv(w.dir.filePath("takeoff.csv"));
+        QVERIFY(csv.open(QIODevice::WriteOnly));
+        QFile plumb(TEST_DATA "/plumb-export.csv");
+        QVERIFY(plumb.open(QIODevice::ReadOnly));
+        csv.write(plumb.readAll());
+        csv.close();
+        w.picker.answers = {csv.fileName()};
+        w.key(Qt::Key_I);
+        QTRY_VERIFY(w.find("applyImport"));
+        QTest::qWait(300);
+        check("import", popupOf("applyImport"));
+        w.key(Qt::Key_Escape);
+        QTRY_VERIFY(!w.find("applyImport"));
+
+        w.key(Qt::Key_Comma, Qt::ControlModifier);
+        QTRY_VERIFY(w.find("contractDate"));
+        QTest::qWait(300);
+        check("project", popupOf("contractDate"));
+        w.click("contractDate");
+        QTest::qWait(400);
+        if (!shots.isEmpty())
+            w.window->grabWindow().save(shots + "/date.png");
+    }
+
+    void theWelcomeScreenAtLaptopSize()
+    {
+        QTemporaryDir dir;
+        Translator translator(dir.filePath("language"));
+        Theme theme(dir.path());
+        FakePicker picker;
+        Backend backend(&picker);
+        QQmlApplicationEngine engine;
+        engine.rootContext()->setContextProperty("translator", &translator);
+        engine.rootContext()->setContextProperty("theme", &theme);
+        engine.rootContext()->setContextProperty("backend", &backend);
+        engine.load(QUrl("qrc:/Main.qml"));
+        auto *window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+        QVERIFY(window);
+        window->resize(1342, 718);
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QTest::qWait(200);
+        QVERIFY(Window::search(window->contentItem(), "newProject"));
+        const QString shots = qEnvironmentVariable("SPIRE_SHOTS");
+        if (!shots.isEmpty())
+            window->grabWindow().save(shots + "/welcome.png");
+    }
+
     void englishWindowKeepsTheSummaryOnTheRight()
     {
         Window w;

@@ -44,7 +44,7 @@ QString dateText(const QDate &date) {
 QString lineLabel(const Line &line) {
     QString text = line.description;
     if (line.quantity > 0)
-        text += "  (" + QString("%1 %2").arg(QLocale().toString(line.quantity, 'g', 10), line.unit).trimmed() + ")";
+        text += " (" + QString("%1 %2").arg(QLocale().toString(line.quantity, 'g', 10), line.unit).trimmed() + ")";
     return text;
 }
 
@@ -121,7 +121,7 @@ void certificatePage(Canvas &c, const ProjectData &data, const Billing &billing,
     struct Field { QString label; QString value; };
     const QList<QList<Field>> columns = {
         {{tr("To owner"), info.owner}, {tr("From contractor"), info.contractor}, {tr("Via architect"), info.architect}},
-        {{tr("Project"), info.location.isEmpty() ? info.name : info.name + " · " + info.location},
+        {{tr("Project"), info.location.isEmpty() ? info.name : info.name + "\n" + info.location},
          {tr("Contract for"), info.contractFor},
          {tr("Contract date"), dateText(info.contractDate)}},
         {{tr("Period to"), dateText(period.periodTo)},
@@ -129,14 +129,38 @@ void certificatePage(Canvas &c, const ProjectData &data, const Billing &billing,
          {tr("Contract no."), info.contractNumber}},
     };
     const qreal colWidth = (w - 40) / 3;
+    // A label, then room for two lines of value.
+    const qreal fieldStep = 20 + 2 * QFontMetricsF(font(10), &c.writer).lineSpacing() + 14;
     for (int col = 0; col < columns.size(); ++col)
         for (int row = 0; row < columns[col].size(); ++row) {
-            const qreal x = col * (colWidth + 20), top = y + row * 64;
+            const qreal x = col * (colWidth + 20), top = y + row * fieldStep;
             c.text(x, top, colWidth, 22, columns[col][row].label.toUpper(), font(7, true), Faint, c.lead());
-            c.text(x, top + 22, colWidth, 32, columns[col][row].value.isEmpty() ? "—" : columns[col][row].value, font(10),
-                   Ink, c.lead());
+            // Two lines at most, so a long address or scope still shows.
+            const QFont valueFont = font(10);
+            const QFontMetricsF metrics(valueFont, &c.writer);
+            QStringList lines;
+            QString rest = columns[col][row].value.isEmpty() ? "—" : columns[col][row].value;
+            while (!rest.isEmpty() && lines.size() < 2) {
+                const qsizetype newline = rest.indexOf('\n');
+                QString part = newline >= 0 ? rest.left(newline) : rest;
+                rest = newline >= 0 ? rest.mid(newline + 1) : QString();
+                if (metrics.horizontalAdvance(part) > colWidth && lines.size() == 0) {
+                    // Break at the last space that fits, and carry the remainder.
+                    qsizetype cut = part.size();
+                    while (cut > 0 && (part[cut - 1] != ' ' || metrics.horizontalAdvance(part.left(cut - 1)) > colWidth))
+                        --cut;
+                    if (cut > 0) {
+                        rest = part.mid(cut) + (rest.isEmpty() ? QString() : " " + rest);
+                        part = part.left(cut - 1);
+                    }
+                }
+                lines << (lines.size() == 1 && !rest.isEmpty() ? part + " " + rest : part);
+            }
+            for (int i = 0; i < lines.size(); ++i)
+                c.text(x, top + 20 + i * metrics.lineSpacing(), colWidth, metrics.lineSpacing(), lines[i], valueFont, Ink,
+                       c.lead());
         }
-    y += 3 * 64 + 6;
+    y += 3 * fieldStep - 8;
     c.hline(0, y, w, Rule);
     y += 22;
 
@@ -317,7 +341,9 @@ void continuationPage(Canvas &c, const ProjectData &data, const Billing &billing
         c.painter.setFont(font(7.5, true));
         c.painter.setPen(Ink);
         c.painter.drawText(c.place(xs[i] + 5, y + 26, columns[i].share * w - 10, SheetHeader - 30),
-                           align | Qt::AlignBottom | Qt::TextWordWrap, columns[i].title);
+                           align | Qt::AlignBottom | Qt::TextWordWrap,
+                           // "(G ÷ C)" stays on one line.
+                           QString(columns[i].title).replace(" ÷ ", QString(QChar(0x202F)) + "÷" + QChar(0x202F)));
     }
     y += SheetHeader;
     c.hline(0, y, w, Ink, 1.5);

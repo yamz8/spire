@@ -11,6 +11,8 @@ Popup {
     anchors.centerIn: parent
     modal: true
     closePolicy: Popup.CloseOnEscape
+    // Holds the keyboard, so Escape reaches it.
+    focus: true
     padding: 22
     width: Math.min(parent.width - 48, 980)
     height: Math.min(parent.height - 48, 680)

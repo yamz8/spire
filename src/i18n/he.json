@@ -285,5 +285,6 @@
   "Could not listen for the file chooser's answer.": "לא ניתן להאזין לתשובת בורר הקבצים.",
   "The file chooser failed: %1": "בורר הקבצים נכשל: %1",
   "On work, %": "על עבודה, %",
-  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "שורה %1: %2 בגיליון %3 לא נספר, כי לגיליון אין קנה מידה."
+  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "שורה %1: %2 בגיליון %3 לא נספר, כי לגיליון אין קנה מידה.",
+  "Approved": "אושרה"
 }

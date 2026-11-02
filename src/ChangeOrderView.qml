@@ -55,9 +55,9 @@ Item {
             visible: list.count > 0
             Label { text: qsTr("No."); color: win.muted; font.pixelSize: 12; Layout.preferredWidth: 56 }
             Label { text: qsTr("Description"); color: win.muted; font.pixelSize: 12; Layout.fillWidth: true }
-            Label { text: qsTr("Date"); color: win.muted; font.pixelSize: 12; Layout.preferredWidth: 120; horizontalAlignment: Text.AlignHCenter }
-            Label { text: qsTr("Amount"); color: win.muted; font.pixelSize: 12; Layout.preferredWidth: 150; horizontalAlignment: Text.AlignRight }
-            Label { text: qsTr("Status"); color: win.muted; font.pixelSize: 12; Layout.preferredWidth: 250 }
+            Label { text: qsTr("Date"); color: win.muted; font.pixelSize: 12; Layout.preferredWidth: 100; horizontalAlignment: Text.AlignHCenter }
+            Label { text: qsTr("Amount"); color: win.muted; font.pixelSize: 12; Layout.preferredWidth: 136; horizontalAlignment: Text.AlignRight }
+            Label { text: qsTr("Status"); color: win.muted; font.pixelSize: 12; Layout.preferredWidth: 220 }
             Item { Layout.preferredWidth: 40 }
         }
 
@@ -106,6 +106,10 @@ Item {
                         Layout.topMargin: 6
                         placeholderText: win.label(descriptionField, qsTr("What changed"))
                         text: rowItem.co.description ?? ""
+                        // Read from the start when not being typed in.
+                        Component.onCompleted: cursorPosition = 0
+                        onActiveFocusChanged: if (!activeFocus) cursorPosition = 0
+                        onTextChanged: if (!activeFocus) cursorPosition = 0
                         onEditingFinished: {
                             if (text.trim() !== (rowItem.co.description ?? ""))
                                 backend.setChangeOrderField(rowItem.co.id, "description", text)
@@ -113,7 +117,7 @@ Item {
                         }
                     }
                     Button {
-                        Layout.preferredWidth: 120
+                        Layout.preferredWidth: 100
                         Layout.topMargin: 6
                         flat: true
                         text: rowItem.co.date ? win.date(rowItem.co.date) : qsTr("Set date")
@@ -123,7 +127,7 @@ Item {
                         id: amountField
                         objectName: "coAmount"
                         readonly property string shown: ((rowItem.co.amount ?? 0) / 100).toFixed(2).replace(".", Qt.locale().decimalPoint)
-                        Layout.preferredWidth: 150
+                        Layout.preferredWidth: 136
                         Layout.topMargin: 6
                         horizontalAlignment: Text.AlignRight
                         enabled: !(rowItem.co.locked ?? false)
@@ -138,7 +142,7 @@ Item {
                         }
                     }
                     RowLayout {
-                        Layout.preferredWidth: 250
+                        Layout.preferredWidth: 220
                         Layout.fillWidth: false
                         spacing: 6
                         Switch {
@@ -150,11 +154,23 @@ Item {
                                 checked = Qt.binding(() => rowItem.co.approved ?? false)
                             }
                         }
-                        Label {
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            elide: Text.ElideRight
-                            text: rowItem.co.approved ? qsTr("Approved on %1").arg(win.applicationName(rowItem.co.approvedIn)) : qsTr("Pending")
-                            color: rowItem.co.approved ? Material.foreground : theme.warning
+                            spacing: 0
+                            Label {
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                text: rowItem.co.approved ? qsTr("Approved") : qsTr("Pending")
+                                color: rowItem.co.approved ? Material.foreground : theme.warning
+                            }
+                            Label {
+                                Layout.fillWidth: true
+                                visible: rowItem.co.approved ?? false
+                                elide: Text.ElideRight
+                                text: win.applicationName(rowItem.co.approvedIn ?? 0)
+                                color: win.muted
+                                font.pixelSize: 12
+                            }
                         }
                     }
                     ToolButton {

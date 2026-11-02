@@ -285,5 +285,6 @@
   "Could not listen for the file chooser's answer.": "Impossible d’attendre la réponse du sélecteur de fichiers.",
   "The file chooser failed: %1": "Le sélecteur de fichiers a échoué : %1",
   "On work, %": "Sur travaux, %",
-  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "Ligne %1 : %2 sur la planche %3 n’est pas compté, car la planche n’a pas d’échelle."
+  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "Ligne %1 : %2 sur la planche %3 n’est pas compté, car la planche n’a pas d’échelle.",
+  "Approved": "Approuvé"
 }

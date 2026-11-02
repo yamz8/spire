@@ -26,7 +26,7 @@ Item {
                             : r.number.toLocaleString(Qt.locale(), 'f', 0)
         case "description": return r.description
         case "percent": return win.percent(r.percent)
-        case "installed": return r.quantity > 0 ? qsTr("%1 of %2 %3").arg(backend.quantity(r.installed)).arg(backend.quantity(r.quantity)).arg(r.unit).trim() : ""
+        case "installed": return r.quantity > 0 ? sheet.installedText(r) : ""
         default: return win.money(r[key])
         }
     }
@@ -80,7 +80,7 @@ Item {
         horizontalAlignment: cell.column.end ? Text.AlignRight : Text.AlignLeft
         elide: Text.ElideRight
         textFormat: Text.PlainText
-        font.pixelSize: 13
+        font.pixelSize: sheet.cellFont
         text: cell.key === "description" && cell.display === "" ? qsTr("Untitled line") : cell.display
         font.italic: cell.key === "description" && cell.display === ""
         font.weight: cell.key === "thisPeriod" && cell.row.thisPeriod !== 0 ? Font.DemiBold : Font.Normal
@@ -89,7 +89,7 @@ Item {
             if (cell.key === "code") return cell.row.changeOrder ? theme.accent : win.muted
             if (cell.key === "thisPeriod" && cell.row.thisPeriod < 0) return theme.danger
             if (cell.key === "balance" && cell.row.balance < 0) return theme.danger
-            if ((cell.key === "previous" || cell.key === "retainage" || cell.key === "stored" || cell.key === "thisPeriod") && cell.row[cell.key] === 0) return win.muted
+            if ((cell.key === "previous" || cell.key === "retainage" || cell.key === "stored" || cell.key === "thisPeriod" || cell.key === "installed") && cell.row[cell.key] === 0) return win.muted
             return Material.foreground
         }
     }

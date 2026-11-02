@@ -30,6 +30,9 @@ Popup {
     ]
 
     onOpened: fieldRepeater.itemAt(0).forceActiveFocus()
+    // The field being typed in saves now, and keys pressed while the popup
+    // fades out go to the window's shortcuts rather than into the field.
+    onAboutToHide: popup.contentItem.forceActiveFocus()
 
     contentItem: ColumnLayout {
         spacing: 16
@@ -54,11 +57,13 @@ Popup {
                         const value = popup.info[modelData.key]
                         return modelData.number ? (value ?? 0).toLocaleString(Qt.locale(), 'f', 2).replace(new RegExp("\\" + Qt.locale().decimalPoint + "?0+$"), "") : (value ?? "")
                     }
-                    Layout.fillWidth: true
                     Layout.columnSpan: modelData.wide ? 2 : 1
-                    Layout.preferredWidth: 1
+                    Layout.preferredWidth: modelData.wide ? popup.availableWidth : (popup.availableWidth - grid.columnSpacing) / 2
                     placeholderText: win.label(field, modelData.label)
                     text: saved
+                    // Read from the start when not being typed in.
+                    onActiveFocusChanged: if (!activeFocus) cursorPosition = 0
+                    onTextChanged: if (!activeFocus) cursorPosition = 0
                     inputMethodHints: modelData.number ? Qt.ImhFormattedNumbersOnly : Qt.ImhNone
                     onEditingFinished: {
                         if (text.trim() !== saved) backend.setInfo(modelData.key, text)
@@ -68,7 +73,7 @@ Popup {
             }
             Button {
                 objectName: "contractDate"
-                Layout.fillWidth: true
+                Layout.preferredWidth: (popup.availableWidth - grid.columnSpacing) / 2
                 flat: true
                 contentItem: ColumnLayout {
                     spacing: 0

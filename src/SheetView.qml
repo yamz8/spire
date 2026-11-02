@@ -29,12 +29,19 @@ Item {
         { key: "retainage", title: qsTr("Retainage"), width: 96, end: true },
     ]
     readonly property var shown: columns.filter(c => !c.quantities || backend.hasQuantities)
-    readonly property int padding: 8
+    readonly property int padding: win.compact ? 6 : 8
+    readonly property int cellFont: win.compact ? 12 : 13
+    readonly property int totalFont: win.compact ? 13 : 14
+    // The installed quantity, and on a wide screen out of how much.
+    function installedText(r) {
+        return (win.compact ? backend.quantity(r.installed) + " " + r.unit
+                            : qsTr("%1 of %2 %3").arg(backend.quantity(r.installed)).arg(backend.quantity(r.quantity)).arg(r.unit)).trim()
+    }
     // Money columns are as wide as their total, the widest figure in them,
     // and the item column as its longest code, so a small screen wastes no
     // room and nothing is cut short.
-    FontMetrics { id: totalMetrics; font.pixelSize: 14; font.weight: Font.DemiBold }
-    FontMetrics { id: cellMetrics; font.pixelSize: 13 }
+    FontMetrics { id: totalMetrics; font.pixelSize: sheet.totalFont; font.weight: Font.DemiBold }
+    FontMetrics { id: cellMetrics; font.pixelSize: sheet.cellFont }
     readonly property var fitted: {
         const s = backend.summary
         const totals = {
@@ -50,8 +57,7 @@ Item {
             const text = r.code !== "" ? r.code : r.changeOrder ? qsTr("CO %1").arg(r.coNumber) : String(r.number)
             code = Math.max(code, cellMetrics.advanceWidth(text))
             if (r.quantity > 0)
-                installed = Math.max(installed, cellMetrics.advanceWidth(
-                    qsTr("%1 of %2 %3").arg(backend.quantity(r.installed)).arg(backend.quantity(r.quantity)).arg(r.unit).trim()))
+                installed = Math.max(installed, cellMetrics.advanceWidth(installedText(r)))
         }
         out.code = Math.ceil(code)
         out.installed = Math.ceil(installed)
@@ -68,7 +74,7 @@ Item {
         return Math.ceil(Math.max(headingWidth(column), content) + 2 * padding + 4)
     }
     readonly property real fixedWidth: shown.reduce((sum, c) => sum + (c.width > 0 ? columnWidth(c) : 0), 0)
-    readonly property real tableWidth: Math.max(flick.width, fixedWidth + 150)
+    readonly property real tableWidth: Math.max(flick.width, fixedWidth + (win.compact ? 120 : 150))
     readonly property real descriptionWidth: tableWidth - fixedWidth
     readonly property var billingKeys: ["installed", "percent", "thisPeriod", "stored"]
 
@@ -335,6 +341,7 @@ Item {
                                 verticalAlignment: Text.AlignVCenter
                                 horizontalAlignment: modelData.end ? Text.AlignRight : Text.AlignLeft
                                 font.weight: Font.DemiBold
+                                font.pixelSize: sheet.totalFont
                                 elide: Text.ElideRight
                                 text: {
                                     switch (modelData.key) {

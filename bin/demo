@@ -1,0 +1,94 @@
+#!/bin/sh
+# Creates a demo project partway through construction: a schedule of values
+# with quantities, two submitted applications, a third in progress, and change
+# orders approved, deducted, and pending. Every name in it is made up.
+#
+#   bin/demo [project.spire]    (default: ~/Documents/Harbor Street Offices.spire)
+set -eu
+
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+SPIRE="${SPIRE:-$(command -v spire || echo "$ROOT/build/spire")}"
+P="${1:-$HOME/Documents/Harbor Street Offices.spire}"
+
+if [ -e "$P" ]; then
+    echo "$P already exists; remove it or name another file." >&2
+    exit 1
+fi
+mkdir -p "$(dirname -- "$P")"
+s() { "$SPIRE" "$@" >/dev/null; }
+
+s new "$P" --name "Harbor Street Offices" --location "1200 Harbor Street, Portland, OR" \
+    --owner "Harbor Street Holdings LLC" --contractor "Northline Builders, Inc." \
+    --architect "Field & Gray Architects" --contract-for "Three-story office building, core and shell" \
+    --contract-number "NB-2614" --contract-date 2026-06-15 --retainage 10 --retainage-stored 10
+
+line() { s add-line "$P" --code "$1" --description "$2" --scheduled "$3"; }
+line 01-000 "General conditions" 96000
+line 02-200 "Sitework and excavation" 74500
+line 03-100 "Concrete foundations" 131250
+line 03-300 "Slab on grade" 58800
+line 05-100 "Structural steel" 214000
+line 05-300 "Metal deck" 46200
+line 06-100 "Rough carpentry" 22400
+line 07-200 "Insulation" 18650
+line 07-500 "Roofing" 68400
+line 08-400 "Storefront and glazing" 142300
+line 09-250 "Partitions, gypsum" 47740
+line 09-650 "Resilient flooring" 31500
+line 09-900 "Painting" 24800
+line 22-000 "Plumbing" 118000
+line 23-000 "HVAC" 176500
+line 26-000 "Electrical" 152300
+
+qty() { s set-line "$P" "$1" --quantity "$2" --unit "$3" --unit-price "$4"; }
+qty 09-250 1240 m2 38.50
+qty 09-650 1050 m2 30.00
+qty 07-500 1800 m2 38.00
+
+bill() { s bill "$P" "$@"; }
+
+# Application 1, August.
+s start "$P" --period-to 2026-08-31 --application-date 2026-08-31
+bill 01-000 --percent 15
+bill 02-200 --percent 90
+bill 03-100 --percent 60
+bill 05-100 --stored 48000
+s submit "$P"
+
+# Application 2, September: steel goes up, a canopy is added, the owner
+# takes back a value-engineering credit.
+s start "$P" --period-to 2026-09-30 --application-date 2026-09-30
+bill 01-000 --percent 30
+bill 02-200 --complete
+bill 03-100 --complete
+bill 03-300 --percent 70
+bill 05-100 --percent 45
+bill 05-100 --stored 22000
+bill 05-300 --percent 20
+bill 22-000 --percent 10
+bill 26-000 --percent 8
+s change-order "$P" --description "Entrance canopy, steel and glass" --amount 14250 --date 2026-09-12 --approve
+s change-order "$P" --description "Value engineering: standard ceiling grid" --amount -3800 --date 2026-09-22 --approve
+s submit "$P"
+
+# Application 3, October, still a draft.
+s start "$P" --period-to 2026-10-31 --application-date 2026-10-31
+bill 01-000 --percent 45
+bill 03-300 --complete
+bill 05-100 --percent 85
+bill 05-100 --stored 0
+bill 05-300 --percent 75
+bill 06-100 --percent 40
+bill 07-500 --installed 540
+bill 07-500 --stored 9500
+bill 08-400 --stored 36000
+bill 09-250 --installed 310
+bill 22-000 --percent 30
+bill 23-000 --percent 15
+bill 26-000 --percent 25
+s change-order "$P" --description "Owner-requested access control at entries" --amount 8600 --date 2026-10-08 --approve
+bill CO1 --percent 40
+bill CO2 --complete
+s change-order "$P" --description "Additional floor drains, level 1" --amount 4300 --date 2026-10-27
+
+echo "$P"

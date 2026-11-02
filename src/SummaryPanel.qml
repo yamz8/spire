@@ -28,6 +28,7 @@ Rectangle {
 
     ScrollView {
         anchors.fill: parent
+        anchors.bottomMargin: actions.visibleChildren.length > 0 ? actions.implicitHeight + 30 : 0
         contentWidth: availableWidth
         clip: true
 
@@ -48,6 +49,35 @@ Rectangle {
                         font.pixelSize: 19
                         font.weight: Font.DemiBold
                         elide: Text.ElideRight
+                    }
+                }
+
+                // Line 8, what this application asks to be paid, first: it is what
+                // the application is for.
+                Rectangle {
+                    objectName: "currentDue"
+                    Layout.fillWidth: true
+                    implicitHeight: dueColumn.implicitHeight + 24
+                    radius: theme.radius
+                    color: Qt.alpha(theme.accent, 0.14)
+                    border.color: Qt.alpha(theme.accent, 0.5)
+                    ColumnLayout {
+                        id: dueColumn
+                        anchors.fill: parent
+                        anchors.margins: 12
+                        spacing: 2
+                        Label { text: "8  " + qsTr("Current payment due"); color: win.muted }
+                        Label {
+                            objectName: "currentDueAmount"
+                            text: win.money(panel.s.currentDue ?? 0)
+                            font.pixelSize: 28
+                            font.weight: Font.DemiBold
+                            color: (panel.s.currentDue ?? 0) < 0 ? theme.danger : theme.accent
+                        }
+                        Label {
+                            text: qsTr("%1 complete").arg(win.percent(panel.s.percentComplete ?? 0))
+                            color: win.muted
+                        }
                     }
                 }
 
@@ -162,35 +192,6 @@ Rectangle {
                     }
                 }
 
-                // Line 8, what this application asks to be paid.
-                Rectangle {
-                    objectName: "currentDue"
-                    Layout.fillWidth: true
-                    Layout.topMargin: 4
-                    implicitHeight: dueColumn.implicitHeight + 24
-                    radius: theme.radius
-                    color: Qt.alpha(theme.accent, 0.14)
-                    border.color: Qt.alpha(theme.accent, 0.5)
-                    ColumnLayout {
-                        id: dueColumn
-                        anchors.fill: parent
-                        anchors.margins: 12
-                        spacing: 2
-                        Label { text: "8  " + qsTr("Current payment due"); color: win.muted }
-                        Label {
-                            objectName: "currentDueAmount"
-                            text: win.money(panel.s.currentDue ?? 0)
-                            font.pixelSize: 28
-                            font.weight: Font.DemiBold
-                            color: (panel.s.currentDue ?? 0) < 0 ? theme.danger : theme.accent
-                        }
-                        Label {
-                            text: qsTr("%1 complete").arg(win.percent(panel.s.percentComplete ?? 0))
-                            color: win.muted
-                        }
-                    }
-                }
-
                 // The change order summary.
                 Label {
                     Layout.topMargin: 6
@@ -213,33 +214,11 @@ Rectangle {
                     Label { text: win.money(-(panel.s.coThisDeductions ?? 0)); Layout.alignment: Qt.AlignRight }
                 }
 
-                // What to do next with this application.
+                // Less common: taking the application back.
                 ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.topMargin: 10
-                    spacing: 6
-
-                    Button {
-                        objectName: "submitPeriod"
-                        Layout.fillWidth: true
-                        visible: backend.editable
-                        highlighted: true
-                        text: qsTr("Submit application")
-                        onClicked: {
-                            sheet.commit()
-                            confirm.ask(qsTr("Submit %1?").arg(win.applicationName(panel.p.number)),
-                                        qsTr("Its amounts are fixed once it is submitted, and the original schedule of values is locked. You can reopen the latest application if something needs to change."),
-                                        qsTr("Submit"), false, () => backend.submitPeriod())
-                        }
-                    }
-                    Button {
-                        objectName: "startNext"
-                        Layout.fillWidth: true
-                        visible: backend.canStartPeriod && backend.lines.count > 0
-                        highlighted: !backend.editable
-                        text: qsTr("Start %1").arg(win.applicationName(backend.periods.length + 1))
-                        onClicked: backend.startPeriod()
-                    }
+                    Layout.topMargin: 6
+                    spacing: 0
                     Button {
                         Layout.fillWidth: true
                         visible: panel.p.canReopen ?? false
@@ -258,7 +237,50 @@ Rectangle {
                                                qsTr("Delete"), true, () => backend.removePeriod())
                     }
                 }
+
             }
+        }
+    }
+
+    // What to do next with this application, always in view below the
+    // figures, which scroll on a short screen.
+    Rectangle {
+        visible: actions.visibleChildren.length > 0
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: actions.top
+        anchors.bottomMargin: 12
+        height: 1
+        color: win.line
+    }
+    ColumnLayout {
+        id: actions
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.margins: 18
+        spacing: 6
+
+        Button {
+            objectName: "submitPeriod"
+            Layout.fillWidth: true
+            visible: backend.editable
+            highlighted: true
+            text: qsTr("Submit application")
+            onClicked: {
+                sheet.commit()
+                confirm.ask(qsTr("Submit %1?").arg(win.applicationName(panel.p.number)),
+                            qsTr("Its amounts are fixed once it is submitted, and the original schedule of values is locked. You can reopen the latest application if something needs to change."),
+                            qsTr("Submit"), false, () => backend.submitPeriod())
+            }
+        }
+        Button {
+            objectName: "startNext"
+            Layout.fillWidth: true
+            visible: backend.canStartPeriod && backend.lines.count > 0
+            highlighted: !backend.editable
+            text: qsTr("Start %1").arg(win.applicationName(backend.periods.length + 1))
+            onClicked: backend.startPeriod()
         }
     }
 }
