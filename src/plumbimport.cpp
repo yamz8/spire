@@ -6,19 +6,80 @@
 #include <QFile>
 #include <QHash>
 #include <QRegularExpression>
+#include <QSet>
 #include <cmath>
 
 namespace {
 QString tr(const char *text) { return QCoreApplication::translate("Import", text); }
 
-enum Field { Code, Description, Quantity, Unit, UnitPrice, Amount, Installed };
+// ItemName is Plumb's Item column: the item's name, or its code when the
+// file also has a description.
+enum Field { Code, Description, ItemName, Sheet, Quantity, Unit, UnitPrice, Amount, Installed };
+
+// What Plumb writes in its export, in each language it speaks: the Item,
+// Sheet, Quantity and Unit headings, the label of an item's total row, and
+// the unit of a sheet that has no scale.
+const char *const plumb_item[] = {
+    "Articol", "Artigo", "Band", "Concepto", "Hạng mục", "Item", "Kalem", "Kipengee", "Kirje", "Liður", "Mír",
+    "Nimike", "Partida", "Položka", "Position", "Post", "Postavka", "Poste", "Pozicija", "Pozycja",
+    "Pozīcija", "Stavka", "Tétel", "Voce", "Άρθρο", "Позиция", "Позиція", "Ставка", "סעיף", "آئٹم", "آیتم",
+    "البند", "आइटम", "আইটেম", "உருப்படி", "අයිතමය", "รายการ", "項目", "项目", "항목",
+};
+const char *const plumb_sheet[] = {
+    "Ark", "Arkusz", "Bileog", "Blad", "Blatt", "Blað", "Folha", "Full", "Helaian", "Hoja", "Laha", "Lap",
+    "Lapa", "Lapas", "Leht", "Lehti", "Lembar", "List", "Pafta", "Planche", "Planșă", "Prancha", "Sheet",
+    "Tavola", "Tờ", "Varaq", "Φύλλο", "Аркуш", "Лист", "גיליון", "اللوحة", "برگه", "شیٹ", "शीट", "শিট",
+    "தாள்", "පත්‍රය", "แผ่นแบบ", "シート", "图纸", "圖面", "시트",
+};
+const char *const plumb_quantity[] = {
+    "Apjoms", "Cainníocht", "Cantidad", "Cantitate", "Dami", "Hajm", "Hoeveelheid", "Ilość", "Khối lượng",
+    "Kiasi", "Kiekis", "Kogus", "Količina", "Kuantiti", "Magn", "Mengde", "Menge", "Mennyiség", "Miktar",
+    "Mängd", "Määrä", "Mængde", "Quantidade", "Quantitat", "Quantity", "Quantità", "Quantité", "Volume",
+    "Výmera", "Výměra", "Ποσότητα", "Количество", "Количина", "Обсяг", "Объём", "כמות", "الكمية", "مقدار",
+    "मात्रा", "পরিমাণ", "அளவு", "ප්‍රමාණය", "ปริมาณ", "工程量", "数量", "數量", "수량",
+};
+const char *const plumb_unit[] = {
+    "Aonad", "Birim", "Birlik", "Eenheid", "Egység", "Einheit", "Eining", "Enhed", "Enhet", "Enota", "Jed.",
+    "Jedn.", "Kizio", "MJ", "Mērvienība", "Satuan", "Unidad", "Unidade", "Unit", "Unitat", "Unitate", "Unità",
+    "Unité", "Vienetas", "Yksikkö", "Ühik", "Đơn vị", "Μονάδα", "Јед.", "Ед. изм.", "Мярка", "Од.", "יחידה",
+    "الوحدة", "اکائی", "واحد", "इकाई", "একক", "அலகு", "ඒකකය", "หน่วย", "单位", "単位", "單位", "단위",
+};
+const char *const plumb_allSheets[] = {
+    "All sheets", "Alla blad", "Alle Blätter", "Alle ark", "Alle bladen", "Barcha varaqlar", "Gach bileog",
+    "Kaikki lehdet", "Kõik lehed", "Laha zote", "Lahat ng sheet", "Minden lap", "Mọi tờ", "Semua helaian",
+    "Semua lembar", "Svi listovi", "Toate planșele", "Todas as folhas", "Todas as pranchas",
+    "Todas las hojas", "Tots els fulls", "Toutes les planches", "Tutte le tavole", "Tüm paftalar",
+    "Visas lapas", "Visi lapai", "Vsi listi", "Všechny listy", "Všetky listy", "Wszystkie arkusze",
+    "Öll blöð", "Όλα τα φύλλα", "Все листы", "Всички листове", "Сви листови", "Усі аркуші", "כל הגיליונות",
+    "تمام شیٹس", "كل اللوحات", "همه برگه‌ها", "सभी शीट", "সব শিট", "எல்லாத் தாள்களும்", "සියලු පත්‍ර",
+    "ทุกแผ่นแบบ", "全シート", "所有图纸", "所有圖面", "모든 시트",
+};
+const char *const plumb_noScale[] = {
+    "Bez mierky", "Bez měřítka", "Brak skali", "Chưa có tỷ lệ", "Ei mittakaavaa", "Enginn mælikvarði",
+    "Fără scară", "Gan scála", "Geen schaal", "Hakuna skeli", "Ingen målestok", "Ingen målestokk",
+    "Ingen skala", "Kein Maßstab", "Masshtab yoʻq", "Mõõtkava puudub", "Nav mēroga", "Nema mjerila",
+    "Ni merila", "Nincs lépték", "No scale", "Nėra mastelio", "Pas d'échelle", "Sem escala", "Sense escala",
+    "Senza scala", "Sin escala", "Tanpa skala", "Tiada skala", "Walang scale", "Ölçek yok", "Χωρίς κλίμακα",
+    "Нема размере", "Немає масштабу", "Нет масштаба", "Няма мащаб", "אין קנה מידה", "اسکیل نہیں",
+    "بدون مقیاس", "بلا مقياس", "स्केल नहीं", "স্কেল নেই", "அளவுகோல் இல்லை", "පරිමාණයක් නැත", "ไม่มีมาตราส่วน",
+    "无比例", "無比例", "縮尺なし", "축척 없음",
+};
+
+QString normalize(const QString &heading);
+
+template <size_t N> QSet<QString> normalized(const char *const (&words)[N]) {
+    QSet<QString> set;
+    for (const char *w : words)
+        set.insert(normalize(QString::fromUtf8(w)));
+    return set;
+}
 
 // Headings Plumb writes, and the ones people use when they tidy an export
 // in a spreadsheet, normalized to lowercase letters and digits only.
 const QHash<QString, Field> &headings() {
     static const QHash<QString, Field> map = [] {
         QHash<QString, Field> m;
-        for (const char *h : {"code", "item", "itemno", "itemnumber", "costcode", "id", "no", "number", "ref"})
+        for (const char *h : {"code", "itemno", "itemnumber", "costcode", "id", "no", "number", "ref"})
             m.insert(h, Code);
         for (const char *h : {"description", "name", "element", "itemdescription", "workdescription", "label",
                               "assembly", "condition"})
@@ -37,6 +98,15 @@ const QHash<QString, Field> &headings() {
                               "installedtodate", "completedquantity", "completedqty", "quantitytodate", "todate",
                               "qtyinstalled", "quantityinstalled", "qtycomplete", "quantitycomplete"})
             m.insert(h, Installed);
+        auto add = [&m](const QSet<QString> &words, Field field) {
+            for (const QString &w : words)
+                if (!w.isEmpty() && !m.contains(w))
+                    m.insert(w, field);
+        };
+        add(normalized(plumb_item), ItemName);
+        add(normalized(plumb_sheet), Sheet);
+        add(normalized(plumb_quantity), Quantity);
+        add(normalized(plumb_unit), Unit);
         return m;
     }();
     return map;
@@ -122,6 +192,14 @@ QList<QPair<int, QStringList>> records(const QString &text, QChar delimiter) {
     return out;
 }
 
+// Plumb puts an apostrophe before text starting with = + - or @, so a
+// spreadsheet doesn't take it for a formula.
+QString unescaped(const QString &text) {
+    if (text.size() > 1 && text[0] == '\'' && QString("=+-@").contains(text[1]))
+        return text.mid(1);
+    return text;
+}
+
 Cents toCents(double value) { return std::llround(value * 100); }
 
 void addNote(ImportChange &change, const QString &note) {
@@ -205,6 +283,12 @@ Takeoff parseTakeoff(const QByteArray &csv) {
             if (headings().contains(heading) && !found.contains(headings().value(heading)))
                 found.insert(headings().value(heading), c);
         }
+        if (found.contains(ItemName)) {
+            if (!found.contains(Description))
+                found.insert(Description, found.value(ItemName));
+            else if (!found.contains(Code))
+                found.insert(Code, found.value(ItemName));
+        }
         if ((found.contains(Description) || found.contains(Code)) && (found.contains(Quantity) || found.contains(Amount))) {
             columns = found;
             first = r + 1;
@@ -239,7 +323,11 @@ Takeoff parseTakeoff(const QByteArray &csv) {
             decimals = Decimals::Point;
     }
 
-    QHash<QString, int> merged;
+    // Plumb writes a row per item and sheet, then the item's total over all
+    // sheets. The total is used when there is one; otherwise sheets add up.
+    static const QSet<QString> totalLabels = normalized(plumb_allSheets);
+    static const QSet<QString> noScale = normalized(plumb_noScale);
+    QList<QPair<TakeoffRow, bool>> read;
     for (int r = first; r < all.size(); ++r) {
         const auto &[lineNumber, fields] = all[r];
         auto cell = [&](Field f) { return columns.contains(f) ? fields.value(columns.value(f)).trimmed() : QString(); };
@@ -247,15 +335,23 @@ Takeoff parseTakeoff(const QByteArray &csv) {
             continue;
         TakeoffRow row;
         row.sourceLine = lineNumber;
-        row.code = cell(Code);
-        row.description = cell(Description).simplified();
+        row.code = unescaped(cell(Code));
+        row.description = unescaped(cell(Description)).simplified();
         row.unit = cell(Unit);
+        const QString sheet = unescaped(cell(Sheet));
+        const bool total = !sheet.isEmpty() && totalLabels.contains(normalize(sheet));
         // A totals row at the bottom of the export is not an item.
         const QString label = (row.description.isEmpty() ? row.code : row.description).toLower();
         if (label == "total" || label == "totals" || label == "grand total" || label == "subtotal")
             continue;
         if (row.code.isEmpty() && row.description.isEmpty()) {
             takeoff.warnings << tr("Line %1 has no code or description.").arg(lineNumber);
+            continue;
+        }
+        if (cell(Quantity).isEmpty() && noScale.contains(normalize(row.unit))) {
+            takeoff.warnings << tr("Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.")
+                                    .arg(lineNumber)
+                                    .arg(row.description.isEmpty() ? row.code : row.description, sheet);
             continue;
         }
         double number = 0;
@@ -292,7 +388,18 @@ Takeoff parseTakeoff(const QByteArray &csv) {
             continue;
         }
 
+        read.append({row, total});
+    }
+
+    QSet<QString> totaled;
+    for (const auto &[row, total] : read)
+        if (total)
+            totaled.insert(key(row));
+    QHash<QString, int> merged;
+    for (const auto &[row, total] : read) {
         const QString k = key(row);
+        if (totaled.contains(k) && !total)
+            continue;
         if (merged.contains(k)) {
             TakeoffRow &into = takeoff.rows[merged.value(k)];
             into.quantity += row.quantity;
@@ -351,9 +458,12 @@ ImportPlan planImport(const ProjectData &data, const Takeoff &takeoff, int perio
         if (!match && !row.description.isEmpty())
             match = byDescription.value(row.description.toLower());
 
-        // The amount the takeoff prices the item at, if it does.
-        const bool priced = row.hasUnitPrice || row.hasAmount;
-        const Cents amount = row.hasUnitPrice ? std::llround(row.quantity * double(row.unitPrice)) : row.amount;
+        // The amount the takeoff prices the item at, if it does. Plumb only
+        // measures, so its quantities are priced at the line's own unit
+        // price when it has one.
+        const Cents unitPrice = row.hasUnitPrice ? row.unitPrice : match ? match->unitPrice : 0;
+        const bool priced = unitPrice > 0 || row.hasAmount;
+        const Cents amount = unitPrice > 0 ? std::llround(row.quantity * double(unitPrice)) : row.amount;
 
         if (match) {
             change.action = ImportChange::Update;
@@ -383,7 +493,7 @@ ImportPlan planImport(const ProjectData &data, const Takeoff &takeoff, int perio
             change.line.description = row.description.isEmpty() ? row.code : row.description;
             change.line.quantity = row.quantity;
             change.line.unit = row.unit;
-            change.line.unitPrice = row.unitPrice;
+            change.line.unitPrice = unitPrice;
             change.line.scheduled = amount;
             change.scheduleChanged = true;
             if (!priced)

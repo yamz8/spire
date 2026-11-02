@@ -407,6 +407,66 @@ private slots:
         QCOMPARE(t.rows[1].installed, 496.0);
     }
 
+    // Exactly what Plumb's toCsv writes: a row per item and sheet, then the
+    // item's total, CRLF line ends, and plain numbers.
+    void plumbExportsUseTheTotalOverAllSheets()
+    {
+        const Takeoff t = parseTakeoff("Item,Kind,Sheet,Measurements,Quantity,Unit\r\n"
+                                       "Partitions,Length,A-101,12,182.40,ft\r\n"
+                                       "Partitions,Length,A-102,8,96.10,ft\r\n"
+                                       "Partitions,Length,All sheets,20,278.50,ft\r\n"
+                                       "\"Flooring, vinyl\",Area,A-101,3,1240.00,sq ft\r\n"
+                                       "\"Flooring, vinyl\",Area,A-104,2,,No scale\r\n"
+                                       "\"Flooring, vinyl\",Area,All sheets,5,1240.00,sq ft\r\n"
+                                       "'-Demo,Count,A-101,4,4,ea\r\n"
+                                       "'-Demo,Count,All sheets,4,4,ea\r\n");
+        QVERIFY2(t.error.isEmpty(), qPrintable(t.error));
+        QCOMPARE(t.rows.size(), 3);
+        // Item is the name, not a code.
+        QCOMPARE(t.rows[0].description, QString("Partitions"));
+        QVERIFY(t.rows[0].code.isEmpty());
+        QCOMPARE(t.rows[0].quantity, 278.5);
+        QCOMPARE(t.rows[0].unit, QString("ft"));
+        QCOMPARE(t.rows[1].description, QString("Flooring, vinyl"));
+        QCOMPARE(t.rows[1].quantity, 1240.0);
+        QCOMPARE(t.rows[1].unit, QString("sq ft"));
+        QCOMPARE(t.rows[2].description, QString("-Demo"));
+        QCOMPARE(t.rows[2].quantity, 4.0);
+        // The sheet without a scale is said, not counted.
+        QCOMPARE(t.warnings.size(), 1);
+        QVERIFY(t.warnings[0].contains("A-104"));
+    }
+
+    void plumbExportsInOtherLanguages()
+    {
+        const Takeoff de = parseTakeoff("Position,Art,Blatt,Messungen,Menge,Einheit\r\n"
+                                        "Estrich,Fläche,EG,2,84.25,m2\r\n"
+                                        "Estrich,Fläche,OG,1,60.00,m2\r\n"
+                                        "Estrich,Fläche,Alle Blätter,3,144.25,m2\r\n");
+        QVERIFY2(de.error.isEmpty(), qPrintable(de.error));
+        QCOMPARE(de.rows.size(), 1);
+        QCOMPARE(de.rows[0].description, QString("Estrich"));
+        QCOMPARE(de.rows[0].quantity, 144.25);
+        const Takeoff he = parseTakeoff(QString("סעיף,סוג,גיליון,מדידות,כמות,יחידה\r\n"
+                                                "קירות,אורך,A-1,1,12.00,m\r\n").toUtf8());
+        QVERIFY2(he.error.isEmpty(), qPrintable(he.error));
+        QCOMPARE(he.rows.size(), 1);
+        QCOMPARE(he.rows[0].quantity, 12.0);
+    }
+
+    void plumbQuantitiesArePricedAtTheLinesUnitPrice()
+    {
+        Project p;
+        p.backend.setLineField(p.footings, "quantity", "40");
+        p.backend.setLineField(p.footings, "unitPrice", "500");
+        const Takeoff t = parseTakeoff("Item,Kind,Sheet,Measurements,Quantity,Unit\r\n"
+                                       "Footings,Area,All sheets,6,42.00,m2\r\n");
+        const ImportPlan plan = planImport(p.backend.data(), t, 0);
+        QCOMPARE(plan.updates, 1);
+        QCOMPARE(plan.changes[0].line.quantity, 42.0);
+        QCOMPARE(plan.changes[0].line.scheduled, dollars(21000));
+    }
+
     void takeoffsWithoutHeadingsAreRefused()
     {
         QVERIFY(!parseTakeoff("a,b,c\n1,2,3\n").error.isEmpty());

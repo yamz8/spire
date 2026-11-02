@@ -59,13 +59,21 @@ Click any value with a frame on hover to edit it in place.
 
 ## Plumb takeoffs
 
-Spire reads the CSV that Plumb exports. Columns are found by their headings,
-in any order, with commas, semicolons, or tabs between them and numbers
-written either `1,234.50` or `1.234,50`:
+Spire reads the CSV that Plumb exports (`E` in Plumb, or `plumb export`), in
+whichever language Plumb wrote it. Each item becomes a line, with its total
+quantity over all sheets and its unit; measurements on a sheet without a
+scale aren't counted, and Spire says which. Plumb measures but doesn't price,
+so a new line's scheduled value is yours to fill in, and a line that has a
+unit price is repriced when its quantity changes.
+
+Other takeoff spreadsheets work too. Columns are found by their headings, in
+any order, with commas, semicolons, or tabs between them and numbers written
+either `1,234.50` or `1.234,50`:
 
 | Heading | Also read as | Used for |
 | --- | --- | --- |
-| Code | Item, Item no., Cost code | Matching lines |
+| Item | | The item's name, as Plumb writes it |
+| Code | Item no., Cost code | Matching lines |
 | Description | Name, Element | Matching lines, naming new ones |
 | Quantity | Qty, Takeoff | The line's quantity |
 | Unit | UoM | m², t, ls, … |
@@ -73,11 +81,12 @@ written either `1,234.50` or `1.234,50`:
 | Amount | Total, Value | Scheduled value, when there is no unit price |
 | Installed | Installed to date, Completed | Percent complete this period |
 
-An item measured on several sheets is added up. Lines are matched by code,
-then by description; matching lines get the new quantities and prices, and
-new items are added while the schedule of values is still open. With an
-Installed column, the open application is billed by quantity. Spire shows
-what each row would do before anything changes.
+An item measured on several sheets is added up, unless the file has its
+total. Lines are matched by code, then by description; matching lines get the
+new quantities and prices, and new items are added while the schedule of
+values is still open. With an Installed column, the open application is
+billed by quantity. Spire shows what each row would do before anything
+changes.
 
 ## Command line
 

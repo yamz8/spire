@@ -284,5 +284,6 @@
   "The desktop's file chooser (xdg-desktop-portal) is not available.": "El selector de archivos del escritorio (xdg-desktop-portal) no está disponible.",
   "Could not listen for the file chooser's answer.": "No se pudo esperar la respuesta del selector de archivos.",
   "The file chooser failed: %1": "El selector de archivos falló: %1",
-  "On work, %": "Sobre obra, %"
+  "On work, %": "Sobre obra, %",
+  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "Línea %1: %2 en la hoja %3 no se cuenta, porque la hoja no tiene escala."
 }

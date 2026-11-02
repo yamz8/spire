@@ -284,5 +284,6 @@
   "The desktop's file chooser (xdg-desktop-portal) is not available.": "בורר הקבצים של שולחן העבודה (xdg-desktop-portal) אינו זמין.",
   "Could not listen for the file chooser's answer.": "לא ניתן להאזין לתשובת בורר הקבצים.",
   "The file chooser failed: %1": "בורר הקבצים נכשל: %1",
-  "On work, %": "על עבודה, %"
+  "On work, %": "על עבודה, %",
+  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "שורה %1: %2 בגיליון %3 לא נספר, כי לגיליון אין קנה מידה."
 }

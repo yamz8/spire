@@ -275,5 +275,6 @@
   "The desktop's file chooser (xdg-desktop-portal) is not available.": "Die Dateiauswahl des Desktops (xdg-desktop-portal) ist nicht verfügbar.",
   "Could not listen for the file chooser's answer.": "Auf die Antwort der Dateiauswahl konnte nicht gewartet werden.",
   "The file chooser failed: %1": "Die Dateiauswahl ist fehlgeschlagen: %1",
-  "On work, %": "Auf Leistung, %"
+  "On work, %": "Auf Leistung, %",
+  "Line %1: %2 on sheet %3 is not counted, because the sheet has no scale.": "Zeile %1: %2 auf Blatt %3 wird nicht gezählt, weil das Blatt keinen Maßstab hat."
 }
