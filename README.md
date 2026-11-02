@@ -116,8 +116,12 @@ On Omarchy (or any Arch Linux), install the package from the
 [latest release](https://github.com/yamz8/spire/releases/latest):
 
 ```sh
-sudo pacman -U https://github.com/yamz8/spire/releases/latest/download/spire-x86_64.pkg.tar.zst
+curl -LO https://github.com/yamz8/spire/releases/latest/download/spire-x86_64.pkg.tar.zst
+sudo pacman -U spire-x86_64.pkg.tar.zst
 ```
+
+The package isn't signed, so pacman installs it from a downloaded file
+but not straight from the URL.
 
 Or build it from source, below. Spire then shows up in the app launcher.
 
