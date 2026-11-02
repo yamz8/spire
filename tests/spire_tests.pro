@@ -10,3 +10,4 @@ SOURCES += main.cpp spire_tests.cpp window_tests.cpp ../src/backend.cpp ../src/b
     ../src/linemodel.cpp ../src/money.cpp ../src/payapp.cpp ../src/plumbimport.cpp ../src/store.cpp ../src/theme.cpp \
     ../src/translator.cpp
 RESOURCES += ../src/resources.qrc
+DEFINES += TEST_DATA=\\\"$$PWD/data\\\"

@@ -437,6 +437,22 @@ private slots:
         QVERIFY(t.warnings[0].contains("A-104"));
     }
 
+    // Written by plumb export itself, from a three-sheet drawing whose last
+    // sheet has no scale.
+    void aRealPlumbExportImports()
+    {
+        const Takeoff t = readTakeoff(TEST_DATA "/plumb-export.csv");
+        QVERIFY2(t.error.isEmpty(), qPrintable(t.error));
+        QCOMPARE(t.rows.size(), 4);
+        QCOMPARE(t.rows[0].description, QString("Partitions, gypsum"));
+        QCOMPARE(t.rows[0].quantity, 105.0);
+        QCOMPARE(t.rows[1].quantity, 252.0);
+        QCOMPARE(t.rows[1].unit, QString("m2"));
+        QCOMPARE(t.rows[2].quantity, 6.0);
+        QCOMPARE(t.rows[3].description, QString("Roofing"));
+        QCOMPARE(t.warnings.size(), 1);
+    }
+
     void plumbExportsInOtherLanguages()
     {
         const Takeoff de = parseTakeoff("Position,Art,Blatt,Messungen,Menge,Einheit\r\n"
