@@ -44,18 +44,28 @@ Item {
         const out = {}
         for (const key in totals)
             out[key] = Math.ceil(totalMetrics.advanceWidth(win.money(totals[key] ?? 0)))
-        let code = 0
+        let code = 0, installed = 0
         for (let i = 0; i < backend.lines.count; ++i) {
             const r = backend.lines.get(i)
             const text = r.code !== "" ? r.code : r.changeOrder ? qsTr("CO %1").arg(r.coNumber) : String(r.number)
             code = Math.max(code, cellMetrics.advanceWidth(text))
+            if (r.quantity > 0)
+                installed = Math.max(installed, cellMetrics.advanceWidth(
+                    qsTr("%1 of %2 %3").arg(backend.quantity(r.installed)).arg(backend.quantity(r.quantity)).arg(r.unit).trim()))
         }
         out.code = Math.ceil(code)
+        out.installed = Math.ceil(installed)
         return out
     }
+    // Headings wrap onto two lines, so a column needs only its longest word.
+    FontMetrics { id: headingMetrics; font.pixelSize: 12; font.weight: Font.Medium }
+    function headingWidth(column) {
+        return Math.max(...column.title.split(/\s+/).map(w => headingMetrics.advanceWidth(w)))
+    }
     function columnWidth(column) {
-        const content = fitted[column.key]
-        return content === undefined ? column.width : Math.max(column.key === "code" ? 44 : 84, content + 2 * padding + 4)
+        const content = column.key === "percent" ? cellMetrics.advanceWidth(win.percent(100)) : fitted[column.key]
+        if (content === undefined) return column.width
+        return Math.ceil(Math.max(headingWidth(column), content) + 2 * padding + 4)
     }
     readonly property real fixedWidth: shown.reduce((sum, c) => sum + (c.width > 0 ? columnWidth(c) : 0), 0)
     readonly property real tableWidth: Math.max(flick.width, fixedWidth + 150)

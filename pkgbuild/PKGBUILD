@@ -1,5 +1,5 @@
 pkgname=spire
-pkgver=0.1.1
+pkgver=0.1.2
 pkgrel=1
 pkgdesc='Progress billing for contractors: schedule of values, pay applications (G702/G703), change orders, retainage'
 url='https://github.com/yamz8/spire'
