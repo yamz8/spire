@@ -142,7 +142,7 @@ Rectangle {
                             Label {
                                 Layout.fillWidth: true
                                 text: modelData.label
-                                elide: Text.ElideRight
+                                wrapMode: Text.Wrap
                                 font.weight: modelData.strong ? Font.DemiBold : Font.Normal
                             }
                             Label {

@@ -26,6 +26,9 @@ ApplicationWindow {
     property int page: 0
     // Single-key shortcuts stand aside while a text field has the keyboard.
     readonly property bool typing: activeFocusItem !== null && activeFocusItem.hasOwnProperty("cursorPosition")
+    // A laptop screen: the summary narrows and the top bar drops what has a
+    // shortcut anyway.
+    readonly property bool compact: width < 1500
     readonly property bool rtl: Qt.application.layoutDirection === Qt.RightToLeft
     readonly property bool modal: projectPopup.opened || importPopup.opened || confirm.opened || datePopup.opened
 
@@ -123,7 +126,7 @@ ApplicationWindow {
                             font.weight: Font.DemiBold
                             elide: Text.ElideRight
                         }
-                        Layout.maximumWidth: 280
+                        Layout.maximumWidth: win.compact ? 200 : 280
                         onClicked: { sheet.commit(); projectPopup.open() }
                         ToolTip.visible: hovered
                         ToolTip.delay: 600
@@ -133,7 +136,9 @@ ApplicationWindow {
                     Dropdown {
                         objectName: "periodBox"
                         visible: backend.periods.length > 0
-                        Layout.preferredWidth: 330
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 180
+                        Layout.maximumWidth: 330
                         model: backend.periods
                         currentIndex: backend.periods.findIndex(p => p.id === backend.currentPeriod)
                         displayText: currentIndex >= 0 ? periodText(backend.periods[currentIndex]) : ""
@@ -193,6 +198,7 @@ ApplicationWindow {
                     }
                     ToolButton {
                         text: qsTr("Undo")
+                        visible: !win.compact
                         enabled: backend.canUndo
                         onClicked: { sheet.commit(); backend.undo() }
                     }
@@ -273,7 +279,7 @@ ApplicationWindow {
                 SummaryPanel {
                     id: summaryPanel
                     objectName: "summary"
-                    Layout.preferredWidth: 340
+                    Layout.preferredWidth: win.compact ? 316 : 340
                     Layout.fillHeight: true
                 }
             }

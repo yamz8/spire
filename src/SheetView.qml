@@ -29,12 +29,40 @@ Item {
         { key: "retainage", title: qsTr("Retainage"), width: 96, end: true },
     ]
     readonly property var shown: columns.filter(c => !c.quantities || backend.hasQuantities)
-    readonly property real fixedWidth: shown.reduce((sum, c) => sum + c.width, 0)
+    readonly property int padding: 8
+    // Money columns are as wide as their total, the widest figure in them,
+    // and the item column as its longest code, so a small screen wastes no
+    // room and nothing is cut short.
+    FontMetrics { id: totalMetrics; font.pixelSize: 14; font.weight: Font.DemiBold }
+    FontMetrics { id: cellMetrics; font.pixelSize: 13 }
+    readonly property var fitted: {
+        const s = backend.summary
+        const totals = {
+            scheduled: s.scheduledTotal, previous: s.previousTotal, thisPeriod: s.thisPeriodTotal,
+            stored: s.storedMaterials, toDate: s.completedToDate, balance: s.balanceTotal, retainage: s.retainage,
+        }
+        const out = {}
+        for (const key in totals)
+            out[key] = Math.ceil(totalMetrics.advanceWidth(win.money(totals[key] ?? 0)))
+        let code = 0
+        for (let i = 0; i < backend.lines.count; ++i) {
+            const r = backend.lines.get(i)
+            const text = r.code !== "" ? r.code : r.changeOrder ? qsTr("CO %1").arg(r.coNumber) : String(r.number)
+            code = Math.max(code, cellMetrics.advanceWidth(text))
+        }
+        out.code = Math.ceil(code)
+        return out
+    }
+    function columnWidth(column) {
+        const content = fitted[column.key]
+        return content === undefined ? column.width : Math.max(column.key === "code" ? 44 : 84, content + 2 * padding + 4)
+    }
+    readonly property real fixedWidth: shown.reduce((sum, c) => sum + (c.width > 0 ? columnWidth(c) : 0), 0)
     readonly property real tableWidth: Math.max(flick.width, fixedWidth + 150)
     readonly property real descriptionWidth: tableWidth - fixedWidth
     readonly property var billingKeys: ["installed", "percent", "thisPeriod", "stored"]
 
-    function widthOf(column) { return column.width > 0 ? column.width : descriptionWidth }
+    function widthOf(column) { return column.width > 0 ? columnWidth(column) : descriptionWidth }
 
     function canEdit(row, key) {
         if (!row) return false
@@ -207,8 +235,8 @@ Item {
                                 required property var modelData
                                 width: sheet.widthOf(modelData)
                                 height: 44
-                                leftPadding: 10
-                                rightPadding: 10
+                                leftPadding: sheet.padding
+                                rightPadding: sheet.padding
                                 verticalAlignment: Text.AlignVCenter
                                 horizontalAlignment: modelData.end ? Text.AlignRight : Text.AlignLeft
                                 text: modelData.title
@@ -292,8 +320,8 @@ Item {
                                 readonly property var s: backend.summary
                                 width: sheet.widthOf(modelData)
                                 height: 44
-                                leftPadding: 10
-                                rightPadding: 10
+                                leftPadding: sheet.padding
+                                rightPadding: sheet.padding
                                 verticalAlignment: Text.AlignVCenter
                                 horizontalAlignment: modelData.end ? Text.AlignRight : Text.AlignLeft
                                 font.weight: Font.DemiBold

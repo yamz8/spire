@@ -55,8 +55,8 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 7
         anchors.right: parent.right
-        anchors.rightMargin: 10
-        width: parent.width - 20
+        anchors.rightMargin: sheet.padding
+        width: parent.width - 2 * sheet.padding
         height: 3
         radius: 1.5
         color: "#26262d"
@@ -74,8 +74,8 @@ Item {
         visible: !cell.editing
         anchors.fill: parent
         anchors.bottomMargin: cell.key === "percent" ? 6 : 0
-        leftPadding: 10
-        rightPadding: 10
+        leftPadding: sheet.padding
+        rightPadding: sheet.padding
         verticalAlignment: Text.AlignVCenter
         horizontalAlignment: cell.column.end ? Text.AlignRight : Text.AlignLeft
         elide: Text.ElideRight
