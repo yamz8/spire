@@ -74,7 +74,10 @@ Item {
         return Math.ceil(Math.max(headingWidth(column), content) + 2 * padding + 4)
     }
     readonly property real fixedWidth: shown.reduce((sum, c) => sum + (c.width > 0 ? columnWidth(c) : 0), 0)
-    readonly property real tableWidth: Math.max(flick.width, fixedWidth + (win.compact ? 120 : 150))
+    // The description gets what is left, but never less than its heading's
+    // longest word (Leistungsbeschreibung) or a readable minimum.
+    readonly property real tableWidth: Math.max(flick.width, fixedWidth + Math.max(win.compact ? 120 : 150,
+        headingWidth(columns[1]) + 2 * padding + 4))
     readonly property real descriptionWidth: tableWidth - fixedWidth
     readonly property var billingKeys: ["installed", "percent", "thisPeriod", "stored"]
 

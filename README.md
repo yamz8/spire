@@ -5,7 +5,7 @@ the schedule of values, enter each line's percent complete every period, and
 export the pay application, the application and certificate for payment with
 its continuation sheet in the familiar G702/G703 format, as a PDF.
 
-![Spire with application 3 of an office building open](docs/screenshot.png)
+![Spire with the third pay application of an office building open](docs/screenshot.png)
 
 - **Schedule of values.** Type in the lines of work with their scheduled
   values, or import them from a Plumb takeoff, with quantities and unit prices.
@@ -109,6 +109,28 @@ spire open job.spire
 
 `spire help` lists every command. `spire skill install` installs a short
 skill so coding agents know how to use them.
+
+## Install
+
+On Omarchy (or any Arch Linux), install the package from the
+[latest release](https://github.com/yamz8/spire/releases/latest):
+
+```sh
+sudo pacman -U https://github.com/yamz8/spire/releases/latest/download/spire-x86_64.pkg.tar.zst
+```
+
+Or build it from source, below. Spire then shows up in the app launcher.
+
+## Try it
+
+`bin/demo` creates a project partway through construction: a three-story
+office building with sixteen lines, two submitted applications, a third in
+progress, and change orders approved, deducted, and pending.
+
+```sh
+bin/demo                    # ~/Documents/Harbor Street Offices.spire
+spire open ~/Documents/"Harbor Street Offices.spire"
+```
 
 ## Build
 
